@@ -1,0 +1,2223 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>PROJECT 0 — RAISE ERA</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;900&family=Inter:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #000000;
+    --surface: #0a0a0a;
+    --surface2: #111111;
+    --border: #1a1a1a;
+    --accent: #c8a96e;
+    --accent2: #8b6914;
+    --text: #e8e0d0;
+    --text2: #6b6560;
+    --text3: #4a4540;
+    --danger: #8b1a1a;
+    --success: #1a4a2e;
+    --gold: #c8a96e;
+    --silver: #8a9ba8;
+    --red: #c0392b;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Dark castle background */
+  .bg-overlay {
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 50% 0%, rgba(200,169,110,0.04) 0%, transparent 60%),
+      radial-gradient(ellipse at 50% 100%, rgba(0,0,0,0.8) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .bg-image {
+    position: fixed;
+    inset: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg"/>') center/cover;
+    opacity: 0.06;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Castle silhouette drawn in CSS */
+  .castle-bg {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    height: 60%;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.04;
+  }
+
+  #app {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ─── LOADING ─────────────────────────────────── */
+  .loading {
+    position: fixed;
+    inset: 0;
+    background: #000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    gap: 24px;
+  }
+
+  .loading-title {
+    font-family: 'Cinzel', serif;
+    font-size: 22px;
+    letter-spacing: 6px;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+
+  .loading-sub {
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: var(--text3);
+    text-transform: uppercase;
+  }
+
+  .loading-bar {
+    width: 120px;
+    height: 1px;
+    background: var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .loading-bar::after {
+    content: '';
+    position: absolute;
+    left: -100%;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--accent);
+    animation: loadbar 1.5s ease infinite;
+  }
+
+  @keyframes loadbar {
+    0% { left: -100%; }
+    100% { left: 100%; }
+  }
+
+  /* ─── NAVIGATION ──────────────────────────────── */
+  .nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    background: rgba(0,0,0,0.95);
+    border-top: 1px solid var(--border);
+    z-index: 50;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .nav-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 4px;
+    background: none;
+    border: none;
+    color: var(--text3);
+    font-size: 10px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: color 0.2s;
+    text-transform: uppercase;
+  }
+
+  .nav-btn.active { color: var(--accent); }
+  .nav-btn svg { width: 20px; height: 20px; }
+
+  /* ─── PAGES ───────────────────────────────────── */
+  .page {
+    display: none;
+    flex-direction: column;
+    min-height: 100vh;
+    padding-bottom: 80px;
+  }
+  .page.active { display: flex; }
+
+  /* ─── HEADER ──────────────────────────────────── */
+  .page-header {
+    padding: 20px 16px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .page-title {
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    letter-spacing: 4px;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+
+  /* ─── HOME PAGE ───────────────────────────────── */
+  .hero {
+    padding: 24px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .player-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .player-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  }
+
+  .player-top {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+
+  .player-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Cinzel', serif;
+    font-size: 20px;
+    color: var(--accent);
+    overflow: hidden;
+    flex-shrink: 0;
+    cursor: pointer;
+    position: relative;
+  }
+
+  .player-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .avatar-edit {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+
+  .player-avatar:hover .avatar-edit { display: flex; }
+
+  .player-info { flex: 1; min-width: 0; }
+
+  .player-name {
+    font-family: 'Cinzel', serif;
+    font-size: 16px;
+    color: var(--text);
+    letter-spacing: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .player-title {
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    margin-top: 2px;
+  }
+
+  .player-desc {
+    font-size: 11px;
+    color: var(--text2);
+    margin-top: 4px;
+    line-height: 1.4;
+  }
+
+  .player-rank {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 1px;
+    padding: 4px 10px;
+    border: 1px solid currentColor;
+    border-radius: 1px;
+  }
+
+  .rank-S { color: #c8a96e; }
+  .rank-A { color: #4a9eff; }
+  .rank-B { color: #4aff8a; }
+  .rank-C { color: #ffd700; }
+  .rank-D { color: #ff8c00; }
+  .rank-E { color: #ff4444; }
+  .rank-U { color: #666; }
+
+  .player-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border-top: 1px solid var(--border);
+    margin-top: 16px;
+  }
+
+  .stat-item {
+    background: var(--surface);
+    padding: 12px 8px;
+    text-align: center;
+  }
+
+  .stat-val {
+    font-family: 'Cinzel', serif;
+    font-size: 18px;
+    color: var(--accent);
+    display: block;
+  }
+
+  .stat-label {
+    font-size: 9px;
+    color: var(--text3);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 2px;
+    display: block;
+  }
+
+  /* ─── MOMO ────────────────────────────────────── */
+  .momo-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .momo-emoji { font-size: 32px; flex-shrink: 0; }
+
+  .momo-info { flex: 1; }
+
+  .momo-label {
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--text3);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .momo-name {
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    color: var(--text);
+  }
+
+  .momo-desc {
+    font-size: 11px;
+    color: var(--text2);
+    margin-top: 3px;
+  }
+
+  /* ─── RADAR CHART ─────────────────────────────── */
+  .chart-container {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 16px;
+  }
+
+  .chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .chart-title {
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--text3);
+    text-transform: uppercase;
+  }
+
+  .chart-toggle {
+    display: flex;
+    gap: 8px;
+  }
+
+  .toggle-btn {
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    background: none;
+    color: var(--text3);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+
+  .toggle-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  canvas#radarChart {
+    display: block;
+    margin: 0 auto;
+    max-width: 260px;
+  }
+
+  /* ─── REPORT PAGE ─────────────────────────────── */
+  .tasks-list {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .task-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .task-item::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 2px;
+    background: var(--border);
+    transition: background 0.2s;
+  }
+
+  .task-item.done {
+    border-color: rgba(200,169,110,0.3);
+  }
+
+  .task-item.done::before {
+    background: var(--accent);
+  }
+
+  .task-check {
+    width: 22px;
+    height: 22px;
+    border: 1px solid var(--border);
+    border-radius: 1px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    font-size: 13px;
+  }
+
+  .task-item.done .task-check {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #000;
+  }
+
+  .task-info { flex: 1; }
+
+  .task-name {
+    font-size: 13px;
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .task-item.done .task-name {
+    color: var(--text2);
+    text-decoration: line-through;
+    text-decoration-color: var(--accent);
+  }
+
+  .task-zords {
+    font-size: 10px;
+    color: var(--text3);
+    margin-top: 2px;
+  }
+
+  .task-zords-val {
+    color: var(--accent);
+    font-family: 'Cinzel', serif;
+  }
+
+  .done-btn {
+    margin: 0 16px 16px;
+    padding: 16px;
+    background: none;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    cursor: pointer;
+    width: calc(100% - 32px);
+    transition: all 0.2s;
+  }
+
+  .done-btn:hover {
+    background: rgba(200,169,110,0.1);
+  }
+
+  .done-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  .progress-bar-wrap {
+    margin: 0 16px 16px;
+    height: 2px;
+    background: var(--border);
+    border-radius: 1px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    transition: width 0.4s ease;
+  }
+
+  .progress-label {
+    margin: 0 16px 8px;
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* ─── STORE PAGE ──────────────────────────────── */
+  .store-balance {
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .balance-val {
+    font-family: 'Cinzel', serif;
+    font-size: 28px;
+    color: var(--accent);
+  }
+
+  .balance-label {
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  .store-cats {
+    display: flex;
+    gap: 8px;
+    padding: 0 16px 12px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .store-cats::-webkit-scrollbar { display: none; }
+
+  .cat-btn {
+    white-space: nowrap;
+    padding: 6px 14px;
+    border: 1px solid var(--border);
+    background: none;
+    color: var(--text3);
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 1px;
+    flex-shrink: 0;
+  }
+
+  .cat-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .store-grid {
+    padding: 0 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .store-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 14px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .store-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: var(--border);
+    transition: background 0.2s;
+  }
+
+  .store-card:hover::before { background: var(--accent); }
+
+  .store-card.unavailable { opacity: 0.4; cursor: not-allowed; }
+
+  .store-card.rare::before { background: linear-gradient(90deg, transparent, #c8a96e, transparent); }
+
+  .card-name {
+    font-size: 11px;
+    color: var(--text);
+    font-weight: 600;
+    margin-bottom: 6px;
+    line-height: 1.3;
+  }
+
+  .card-desc {
+    font-size: 10px;
+    color: var(--text3);
+    line-height: 1.4;
+    margin-bottom: 10px;
+  }
+
+  .card-cost {
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    color: var(--accent);
+  }
+
+  .card-cd {
+    font-size: 9px;
+    color: var(--text3);
+    letter-spacing: 1px;
+    margin-top: 2px;
+  }
+
+  .card-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    font-size: 8px;
+    letter-spacing: 1px;
+    padding: 2px 6px;
+    background: rgba(200,169,110,0.15);
+    color: var(--accent);
+    border-radius: 1px;
+    text-transform: uppercase;
+  }
+
+  /* ─── HISTORY PAGE ────────────────────────────── */
+  .history-list {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .history-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 14px;
+  }
+
+  .history-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .history-date {
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 2px;
+  }
+
+  .history-momo { font-size: 18px; }
+
+  .history-stats {
+    display: flex;
+    gap: 12px;
+  }
+
+  .history-stat {
+    font-size: 11px;
+    color: var(--text2);
+  }
+
+  .history-stat span {
+    color: var(--accent);
+    font-family: 'Cinzel', serif;
+  }
+
+  .history-bar {
+    height: 2px;
+    background: var(--border);
+    margin-top: 10px;
+    border-radius: 1px;
+    overflow: hidden;
+  }
+
+  .history-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    transition: width 0.4s;
+  }
+
+  .history-mood {
+    margin-top: 8px;
+    font-size: 10px;
+    color: var(--text3);
+  }
+
+  /* ─── PROFILE EDIT ────────────────────────────── */
+  .profile-section {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .avatar-large {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Cinzel', serif;
+    font-size: 28px;
+    color: var(--accent);
+    margin: 0 auto;
+    cursor: pointer;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .avatar-large img { width: 100%; height: 100%; object-fit: cover; }
+
+  .avatar-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    color: var(--accent);
+    letter-spacing: 1px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .avatar-large:hover .avatar-overlay { opacity: 1; }
+
+  .field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .field-label {
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--text3);
+    text-transform: uppercase;
+  }
+
+  .field-input {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 1px;
+    padding: 12px 14px;
+    color: var(--text);
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+
+  .field-input:focus { border-color: var(--accent); }
+
+  textarea.field-input {
+    resize: none;
+    height: 80px;
+    line-height: 1.5;
+  }
+
+  .save-btn {
+    padding: 14px;
+    background: none;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+  }
+
+  .save-btn:hover { background: rgba(200,169,110,0.1); }
+
+  .title-history {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 14px;
+  }
+
+  .th-label {
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--text3);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .title-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 1px;
+    margin: 3px;
+    border-radius: 1px;
+  }
+
+  /* ─── LEADERBOARD ─────────────────────────────── */
+  .leaders-list {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .leader-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .leader-item:first-child { border-color: rgba(200,169,110,0.4); }
+
+  .leader-rank {
+    font-family: 'Cinzel', serif;
+    font-size: 18px;
+    color: var(--text3);
+    width: 24px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .leader-rank.gold { color: #c8a96e; }
+  .leader-rank.silver { color: #8a9ba8; }
+  .leader-rank.bronze { color: #8b5e3c; }
+
+  .leader-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    color: var(--accent);
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .leader-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+  .leader-info { flex: 1; min-width: 0; }
+
+  .leader-name {
+    font-size: 13px;
+    color: var(--text);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .leader-title {
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 1px;
+    margin-top: 1px;
+  }
+
+  .leader-pts {
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .leader-pts-val {
+    font-family: 'Cinzel', serif;
+    font-size: 16px;
+    color: var(--accent);
+  }
+
+  .leader-pts-label {
+    font-size: 9px;
+    color: var(--text3);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .leader-class {
+    font-size: 10px;
+    padding: 2px 8px;
+    border: 1px solid currentColor;
+    border-radius: 1px;
+    font-family: 'Cinzel', serif;
+  }
+
+  /* ─── MODAL ───────────────────────────────────── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 200;
+    display: none;
+    align-items: flex-end;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    width: 100%;
+    padding: 20px 16px 40px;
+    border-radius: 2px 2px 0 0;
+    position: relative;
+    animation: slideUp 0.3s ease;
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+
+  .modal-title {
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+
+  .modal-desc {
+    font-size: 12px;
+    color: var(--text2);
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+
+  .modal-cost {
+    font-family: 'Cinzel', serif;
+    font-size: 24px;
+    color: var(--accent);
+    margin-bottom: 20px;
+  }
+
+  .modal-btns {
+    display: flex;
+    gap: 8px;
+  }
+
+  .modal-confirm {
+    flex: 1;
+    padding: 14px;
+    background: none;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+
+  .modal-cancel {
+    flex: 1;
+    padding: 14px;
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text3);
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+
+  /* ─── TOAST ───────────────────────────────────── */
+  .toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-80px);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 10px 20px;
+    font-size: 12px;
+    color: var(--text);
+    letter-spacing: 1px;
+    z-index: 300;
+    transition: transform 0.3s ease;
+    white-space: nowrap;
+    border-radius: 1px;
+  }
+
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.success { border-color: var(--accent); color: var(--accent); }
+  .toast.error { border-color: var(--red); color: var(--red); }
+
+  /* ─── MOOD SELECTOR ───────────────────────────── */
+  .mood-select {
+    margin: 0 16px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 14px;
+  }
+
+  .mood-label {
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--text3);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .mood-btns {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+  }
+
+  .mood-btn {
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--border);
+    background: none;
+    border-radius: 1px;
+    font-size: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mood-btn.selected {
+    border-color: var(--accent);
+    background: rgba(200,169,110,0.1);
+  }
+
+  /* ─── STREAK CARD ─────────────────────────────── */
+  .streak-card {
+    margin: 0 16px 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 14px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .streak-fire { font-size: 28px; }
+
+  .streak-val {
+    font-family: 'Cinzel', serif;
+    font-size: 32px;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .streak-info-text {
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  /* ─── SCROLLABLE ──────────────────────────────── */
+  .scroll-content {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ─── UNREGISTERED ────────────────────────────── */
+  .unreg-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 32px;
+    text-align: center;
+    gap: 16px;
+  }
+
+  .unreg-title {
+    font-family: 'Cinzel', serif;
+    font-size: 20px;
+    letter-spacing: 4px;
+    color: var(--accent);
+  }
+
+  .unreg-sub {
+    font-size: 12px;
+    color: var(--text3);
+    letter-spacing: 2px;
+    line-height: 1.6;
+  }
+
+  .reg-input {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 1px;
+    padding: 14px;
+    color: var(--text);
+    font-size: 14px;
+    width: 100%;
+    max-width: 280px;
+    text-align: center;
+    outline: none;
+    font-family: 'Cinzel', serif;
+    letter-spacing: 2px;
+  }
+
+  .reg-input:focus { border-color: var(--accent); }
+
+  .reg-btn {
+    padding: 14px 32px;
+    background: none;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    cursor: pointer;
+    width: 100%;
+    max-width: 280px;
+  }
+
+  /* Divider */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 8px 16px;
+  }
+
+  .section-label {
+    padding: 8px 16px 4px;
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: var(--text3);
+    text-transform: uppercase;
+  }
+
+  input[type="file"] { display: none; }
+</style>
+</head>
+<body>
+
+<div class="bg-overlay"></div>
+
+<div class="loading" id="loading">
+  <div class="loading-title">PROJECT 0</div>
+  <div class="loading-bar"></div>
+  <div class="loading-sub">Raise Era</div>
+</div>
+
+<div id="app" style="display:none;">
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="modalOverlay" onclick="closeModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-title" id="modalTitle"></div>
+      <div class="modal-desc" id="modalDesc"></div>
+      <div class="modal-cost" id="modalCost"></div>
+      <div class="modal-btns">
+        <button class="modal-cancel" onclick="closeModal()">إلغاء</button>
+        <button class="modal-confirm" id="modalConfirm">تأكيد</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- File input -->
+  <input type="file" id="avatarInput" accept="image/*" onchange="handleAvatarChange(event)">
+
+  <!-- UNREGISTERED SCREEN -->
+  <div class="unreg-screen" id="unregScreen" style="display:none;">
+    <div class="unreg-title">PROJECT 0</div>
+    <div class="unreg-sub">أنت غير مسجل في النظام.<br>أدخل اسمك للبدء.</div>
+    <input class="reg-input" id="regInput" placeholder="اسمك" maxlength="20">
+    <button class="reg-btn" onclick="registerPlayer()">دخول النظام</button>
+  </div>
+
+  <!-- HOME PAGE -->
+  <div class="page active scroll-content" id="page-home">
+    <div class="page-header">
+      <div class="page-title">PROJECT 0 — RAISE ERA</div>
+    </div>
+    <div class="hero">
+
+      <!-- Player Card -->
+      <div class="player-card">
+        <div class="player-top">
+          <div class="player-avatar" onclick="goToProfile()">
+            <span id="homeAvatarText">Z</span>
+            <img id="homeAvatarImg" style="display:none;">
+            <div class="avatar-edit">✎</div>
+          </div>
+          <div class="player-info">
+            <div class="player-name" id="playerNameHome">—</div>
+            <div class="player-title" id="playerTitleHome"></div>
+            <div class="player-desc" id="playerDescHome"></div>
+          </div>
+          <div class="player-rank rank-U" id="playerRankHome">⬜ —</div>
+        </div>
+        <div class="player-stats">
+          <div class="stat-item">
+            <span class="stat-val" id="homeZords">0</span>
+            <span class="stat-label">Zords</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-val" id="homeStreak">0</span>
+            <span class="stat-label">Streak</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-val" id="homePoints">0</span>
+            <span class="stat-label">Points</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Momo -->
+      <div class="momo-card">
+        <div class="momo-emoji" id="momoEmoji">😐</div>
+        <div class="momo-info">
+          <div class="momo-label">Momo اليوم</div>
+          <div class="momo-name" id="momoName">Neutral Momo</div>
+          <div class="momo-desc" id="momoDesc">50–80% من المهام</div>
+        </div>
+      </div>
+
+      <!-- Radar Chart -->
+      <div class="chart-container">
+        <div class="chart-header">
+          <div class="chart-title">إحصائيات المهام</div>
+          <div class="chart-toggle">
+            <button class="toggle-btn active" onclick="setChartType('radar')" id="radarBtn">Radar</button>
+            <button class="toggle-btn" onclick="setChartType('bar')" id="barBtn">Bar</button>
+          </div>
+        </div>
+        <canvas id="radarChart" width="260" height="260"></canvas>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- REPORT PAGE -->
+  <div class="page scroll-content" id="page-report">
+    <div class="page-header">
+      <div class="page-title">التقرير اليومي</div>
+    </div>
+
+    <div id="reportSubmitted" style="display:none; padding:32px 16px; text-align:center;">
+      <div style="font-family:'Cinzel',serif; font-size:14px; color:var(--accent); letter-spacing:2px; margin-bottom:8px;">تم إغلاق اليوم</div>
+      <div style="font-size:12px; color:var(--text3);">لقد أرسلت تقريرك اليوم.</div>
+    </div>
+
+    <div id="reportForm">
+      <div class="progress-label">
+        <span>التقدم</span>
+        <span id="progressText">0 / 7</span>
+      </div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+      </div>
+
+      <div class="tasks-list" id="tasksList"></div>
+
+      <div class="section-label">مهام خارجية</div>
+      <div class="tasks-list" id="extraTasksList"></div>
+      <div style="padding:0 16px 16px; display:flex; gap:8px;">
+        <input class="field-input" id="extraTaskInput" placeholder="اسم مهمة خارجية..." style="flex:1;" onkeypress="if(event.key==='Enter')addExtraTask()">
+        <button class="modal-confirm" style="flex:0 0 auto; padding:12px 18px;" onclick="addExtraTask()">+</button>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="mood-select" id="moodSelect" style="display:none;">
+        <div class="mood-label">كيف كان يومك؟</div>
+        <div class="mood-btns">
+          <button class="mood-btn" onclick="selectMood(1)">😞</button>
+          <button class="mood-btn" onclick="selectMood(2)">😐</button>
+          <button class="mood-btn" onclick="selectMood(3)">🙂</button>
+          <button class="mood-btn" onclick="selectMood(4)">😊</button>
+          <button class="mood-btn" onclick="selectMood(5)">🌟</button>
+        </div>
+      </div>
+
+      <button class="done-btn" id="doneBtn" onclick="submitReport()">✓ DONE</button>
+    </div>
+  </div>
+
+  <!-- STORE PAGE -->
+  <div class="page scroll-content" id="page-store">
+    <div class="page-header">
+      <div class="page-title">المتجر</div>
+    </div>
+    <div class="store-balance">
+      <div>
+        <div class="balance-val" id="storeZords">0</div>
+        <div class="balance-label">Zords متاحة</div>
+      </div>
+    </div>
+    <div class="store-cats" id="storeCats"></div>
+    <div class="store-grid" id="storeGrid"></div>
+  </div>
+
+  <!-- LEADERBOARD PAGE -->
+  <div class="page scroll-content" id="page-rank">
+    <div class="page-header">
+      <div class="page-title">التصنيف</div>
+    </div>
+    <div class="streak-card">
+      <div class="streak-fire">🔥</div>
+      <div>
+        <div class="streak-val" id="myStreak">0</div>
+        <div class="streak-info-text">Streak Days</div>
+      </div>
+    </div>
+    <div class="leaders-list" id="leadersList"></div>
+  </div>
+
+  <!-- PROFILE PAGE -->
+  <div class="page scroll-content" id="page-profile">
+    <div class="page-header">
+      <div class="page-title">الملف الشخصي</div>
+    </div>
+    <div class="profile-section">
+      <div class="avatar-large" onclick="document.getElementById('avatarInput').click()">
+        <span id="profileAvatarText">Z</span>
+        <img id="profileAvatarImg" style="display:none;">
+        <div class="avatar-overlay">تغيير الصورة</div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">الاسم</div>
+        <input class="field-input" id="editName" placeholder="اسمك" maxlength="20">
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">وصف شخصي</div>
+        <textarea class="field-input" id="editDesc" placeholder="اكتب شيئاً عن نفسك..." maxlength="100"></textarea>
+      </div>
+
+      <button class="save-btn" onclick="saveProfile()">حفظ التغييرات</button>
+
+      <div class="title-history" id="titleHistoryCard" style="display:none;">
+        <div class="th-label">الألقاب المحرزة</div>
+        <div id="titleHistoryList"></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div style="font-size:10px; color:var(--text3); letter-spacing:2px; text-transform:uppercase; margin-bottom:8px;">سجل آخر 7 أيام</div>
+      <div id="historyListProfile" class="history-list" style="padding:0;"></div>
+    </div>
+  </div>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <button class="nav-btn active" onclick="navigate('home')" id="nav-home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      الرئيسية
+    </button>
+    <button class="nav-btn" onclick="navigate('report')" id="nav-report">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+      التقرير
+    </button>
+    <button class="nav-btn" onclick="navigate('store')" id="nav-store">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+      المتجر
+    </button>
+    <button class="nav-btn" onclick="navigate('rank')" id="nav-rank">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+      التصنيف
+    </button>
+    <button class="nav-btn" onclick="navigate('profile')" id="nav-profile">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      حسابي
+    </button>
+  </nav>
+</div>
+
+<script>
+// ─── CONFIG ───────────────────────────────────────────────────
+const SUPABASE_URL = 'SUPABASE_URL_PLACEHOLDER';
+const SUPABASE_KEY = 'SUPABASE_KEY_PLACEHOLDER';
+
+const TASKS = [
+  { key: 'timer',    name: 'المؤقت اليومي',   zords: 3,  emoji: '⏱' },
+  { key: 'exercise', name: 'التمارين اليومية', zords: 6,  emoji: '💪' },
+  { key: 'skills',   name: 'صقل المهارات',     zords: 5,  emoji: '🎯' },
+  { key: 'study',    name: 'الدراسة اليومية',  zords: 6,  emoji: '📚' },
+  { key: 'learning', name: 'التعلم الخارجي',   zords: 5,  emoji: '🧠' },
+  { key: 'language', name: 'تطوير اللغة',       zords: 5,  emoji: '🌐' },
+  { key: 'coding',   name: 'رحلة مبرمج',        zords: 7,  emoji: '💻' },
+];
+
+const STORE_ITEMS = {
+  rest_day:       { name: 'يوم راحة كامل',       cost: 280,  cooldown: 14, cat: 'راحة',    desc: 'تخطي جميع المهام ليوم واحد', rare: false },
+  half_day:       { name: 'تخفيف يوم 50%',        cost: 150,  cooldown: 7,  cat: 'راحة',    desc: 'تخفيض المطلوب إلى 50%',      rare: false },
+  postpone_task:  { name: 'تأجيل مهمة',           cost: 60,   cooldown: 3,  cat: 'راحة',    desc: 'نقل مهمة لليوم التالي',       rare: false },
+  delete_task:    { name: 'حذف مهمة رئيسية',      cost: 500,  cooldown: 30, cat: 'تعديل',   desc: 'حذف مهمة بشكل دائم',         rare: false },
+  freeze_task:    { name: 'تجميد مهمة 3 أيام',    cost: 200,  cooldown: 14, cat: 'تعديل',   desc: 'إيقاف مهمة لمدة 3 أيام',     rare: false },
+  replace_task:   { name: 'استبدال مهمة',          cost: 350,  cooldown: 21, cat: 'تعديل',   desc: 'استبدال مهمة لأسبوع',        rare: false },
+  shield:         { name: 'درع خصم',               cost: 120,  cooldown: 7,  cat: 'حماية',   desc: 'إلغاء خصم واحد',             rare: false },
+  streak_protect: { name: 'حماية Streak',          cost: 180,  cooldown: 14, cat: 'حماية',   desc: 'حفظ الـ Streak عند انقطاع',   rare: false },
+  freeze_penalty: { name: 'تجميد عقوبة 48h',       cost: 90,   cooldown: 15, cat: 'حماية',   desc: 'تأجيل عقوبة لـ 48 ساعة',     rare: false },
+  double_day:     { name: 'مضاعف يوم',             cost: 250,  cooldown: 14, cat: 'امتياز',  desc: 'مضاعفة Zords اليوم',         rare: false },
+  pardon:         { name: 'بطاقة عفو',             cost: 300,  cooldown: 30, cat: 'امتياز',  desc: 'إلغاء سجل مخالفة',           rare: false },
+  extend_time:    { name: 'تمديد وقت +2h',         cost: 40,   cooldown: 2,  cat: 'امتياز',  desc: 'تمديد موعد التسليم',          rare: false },
+  reset:          { name: 'إعادة تعيين',            cost: 800,  cooldown: 30, cat: 'نادر',    desc: 'مسح كل الخصومات',            rare: true  },
+  immunity_week:  { name: 'حصانة أسبوع',           cost: 1200, cooldown: 30, cat: 'نادر',    desc: 'لا خصومات لأسبوع',           rare: true  },
+  change_rule:    { name: 'تغيير قاعدة',            cost: 600,  cooldown: 30, cat: 'نادر',    desc: 'اقتراح تعديل للمدير',        rare: true  },
+};
+
+// ─── STATE ────────────────────────────────────────────────────
+let state = {
+  player: null,
+  data: null,
+  tasksDone: {},
+  externalTasks: [],
+  chartType: 'radar',
+  selectedMood: null,
+  selectedStore: null,
+  storeCat: 'كل',
+  avatarUrl: null,
+};
+
+// ─── SUPABASE API ─────────────────────────────────────────────
+async function sbGet(key) {
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/bot_data?key=eq.${key}&select=value`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+    });
+    const d = await r.json();
+    return d && d[0] ? JSON.parse(d[0].value) : null;
+  } catch { return null; }
+}
+
+async function sbSet(key, value) {
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/bot_data`, {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates'
+      },
+      body: JSON.stringify({ key, value: JSON.stringify(value) })
+    });
+  } catch {}
+}
+
+// ─── INIT ──────────────────────────────────────────────────────
+async function init() {
+  try {
+    const tg = window.Telegram?.WebApp;
+    if (tg) { tg.ready(); tg.expand(); }
+
+    let data = null;
+    try {
+      const fetchTimeout = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 8000));
+      data = await Promise.race([sbGet('main'), fetchTimeout]);
+    } catch {
+      data = null;
+    }
+    state.data = data || { players: {}, custom_rules: [] };
+
+    const tgUser = tg?.initDataUnsafe?.user;
+    const userId = tgUser?.id;
+
+    if (userId) {
+      for (const [name, p] of Object.entries(state.data.players || {})) {
+        if (p.registered_id === userId) { state.player = name; break; }
+      }
+    }
+
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+
+    if (!state.player) {
+      document.getElementById('unregScreen').style.display = 'flex';
+      document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
+      document.querySelector('.nav').style.display = 'none';
+      return;
+    }
+
+    renderAll();
+  } catch (err) {
+    // Fallback: always show app even if init crashes
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    document.getElementById('unregScreen').style.display = 'flex';
+    document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
+    document.querySelector('.nav').style.display = 'none';
+    state.data = { players: {}, custom_rules: [] };
+  }
+}
+
+// ─── REGISTER ──────────────────────────────────────────────────
+async function registerPlayer() {
+  const name = document.getElementById('regInput').value.trim();
+  if (!name || name.length < 2) { showToast('الاسم قصير جداً', 'error'); return; }
+
+  const tg = window.Telegram?.WebApp;
+  const userId = tg?.initDataUnsafe?.user?.id;
+  const chatId = tg?.initDataUnsafe?.chat?.id || userId;
+
+  if (!state.data.players) state.data.players = {};
+
+  state.data.players[name] = {
+    name, registered_id: userId, chat_id: chatId, group_id: chatId,
+    zords: 0, streak: 0, weekly_points: 0, momos: [], purchases: {},
+    violations: [], active_title: null, title_history: [],
+    daily_reports: {}, task_stats: {
+      timer: 0, exercise: 0, skills: 0,
+      study: 0, learning: 0, language: 0, coding: 0
+    },
+    early_warrior_days: 0, task_predator_streak: 0,
+    mood_log: {}, hall_of_fame: null, consecutive_low_weeks: 0,
+    description: '', avatar_url: null
+  };
+
+  await sbSet('main', state.data);
+  state.player = name;
+
+  document.getElementById('unregScreen').style.display = 'none';
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-home').classList.add('active');
+  document.querySelector('.nav').style.display = 'flex';
+
+  showToast('تم التسجيل بنجاح', 'success');
+  renderAll();
+}
+
+// ─── RENDER ALL ────────────────────────────────────────────────
+function renderAll() {
+  renderHome();
+  renderReport();
+  renderStore();
+  renderRank();
+  renderProfile();
+}
+
+// ─── HOME ──────────────────────────────────────────────────────
+function renderHome() {
+  if (!state.player || !state.data) return;
+  const p = state.data.players[state.player];
+  if (!p) return;
+
+  document.getElementById('playerNameHome').textContent = state.player;
+  document.getElementById('playerTitleHome').textContent = p.active_title || '';
+  document.getElementById('playerDescHome').textContent = p.description || '';
+  document.getElementById('homeZords').textContent = p.zords || 0;
+  document.getElementById('homeStreak').textContent = p.streak || 0;
+  document.getElementById('homePoints').textContent = p.weekly_points || 0;
+
+  const momos = (p.momos || []).slice(-7);
+  const rank = calcRank(p.weekly_points || 0, momos);
+  const rankEl = document.getElementById('playerRankHome');
+  rankEl.textContent = rank;
+  rankEl.className = 'player-rank ' + rankClass(rank);
+
+  // Avatar
+  if (p.avatar_url) {
+    document.getElementById('homeAvatarImg').src = p.avatar_url;
+    document.getElementById('homeAvatarImg').style.display = 'block';
+    document.getElementById('homeAvatarText').style.display = 'none';
+  } else {
+    document.getElementById('homeAvatarText').textContent = state.player[0].toUpperCase();
+    document.getElementById('homeAvatarImg').style.display = 'none';
+    document.getElementById('homeAvatarText').style.display = 'block';
+  }
+
+  // Momo
+  const today = todayStr();
+  const todayReport = p.daily_reports?.[today];
+  const pct = todayReport?.result?.pct || 0;
+  const momo = getMomo(pct, false);
+  document.getElementById('momoEmoji').textContent = momo.emoji;
+  document.getElementById('momoName').textContent = momo.name;
+  document.getElementById('momoDesc').textContent = momo.desc;
+
+  // Chart
+  drawChart(p.task_stats || {});
+}
+
+function getMomo(pct, hasViolations) {
+  if (pct === 100 && !hasViolations) return { emoji: '🌟', name: 'Elite Momo', desc: 'يوم مثالي' };
+  if (pct >= 80) return { emoji: '😊', name: 'Happy Momo', desc: '80–100% من المهام' };
+  if (pct >= 50) return { emoji: '😐', name: 'Neutral Momo', desc: '50–80% من المهام' };
+  return { emoji: '😡', name: 'Angry Momo', desc: 'أقل من 50%' };
+}
+
+// ─── CHART ────────────────────────────────────────────────────
+function setChartType(type) {
+  state.chartType = type;
+  document.getElementById('radarBtn').classList.toggle('active', type === 'radar');
+  document.getElementById('barBtn').classList.toggle('active', type === 'bar');
+  const p = state.data?.players?.[state.player];
+  if (p) drawChart(p.task_stats || {});
+}
+
+function drawChart(stats) {
+  const canvas = document.getElementById('radarChart');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const labels = ['Timer', 'Exercise', 'Skills', 'Study', 'Learning', 'Language', 'Coding'];
+  const maxVals = [30, 30, 30, 30, 30, 30, 30];
+  const vals = labels.map((l, i) => {
+    const k = TASKS[i].key;
+    return Math.min(stats[k] || 0, maxVals[i]);
+  });
+  const norms = vals.map((v, i) => v / maxVals[i]);
+
+  if (state.chartType === 'radar') {
+    drawRadar(ctx, W, H, labels, norms);
+  } else {
+    drawBar(ctx, W, H, labels, norms);
+  }
+}
+
+function drawRadar(ctx, W, H, labels, norms) {
+  const cx = W / 2, cy = H / 2, r = Math.min(W, H) * 0.38;
+  const n = labels.length;
+  const angle = (i) => (Math.PI * 2 * i / n) - Math.PI / 2;
+
+  // Grid
+  ctx.strokeStyle = '#1a1a1a';
+  ctx.lineWidth = 1;
+  for (let g = 1; g <= 5; g++) {
+    ctx.beginPath();
+    for (let i = 0; i < n; i++) {
+      const a = angle(i), gr = r * g / 5;
+      i === 0 ? ctx.moveTo(cx + Math.cos(a) * gr, cy + Math.sin(a) * gr)
+              : ctx.lineTo(cx + Math.cos(a) * gr, cy + Math.sin(a) * gr);
+    }
+    ctx.closePath();
+    ctx.stroke();
+  }
+
+  // Axes
+  for (let i = 0; i < n; i++) {
+    const a = angle(i);
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r);
+    ctx.strokeStyle = '#1a1a1a';
+    ctx.stroke();
+  }
+
+  // Data fill
+  ctx.beginPath();
+  for (let i = 0; i < n; i++) {
+    const a = angle(i), rv = r * (norms[i] || 0.02);
+    i === 0 ? ctx.moveTo(cx + Math.cos(a) * rv, cy + Math.sin(a) * rv)
+            : ctx.lineTo(cx + Math.cos(a) * rv, cy + Math.sin(a) * rv);
+  }
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(200,169,110,0.15)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(200,169,110,0.7)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // Points
+  for (let i = 0; i < n; i++) {
+    const a = angle(i), rv = r * (norms[i] || 0.02);
+    ctx.beginPath();
+    ctx.arc(cx + Math.cos(a) * rv, cy + Math.sin(a) * rv, 3, 0, Math.PI * 2);
+    ctx.fillStyle = '#c8a96e';
+    ctx.fill();
+  }
+
+  // Labels
+  ctx.font = '10px Inter';
+  ctx.fillStyle = '#6b6560';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  for (let i = 0; i < n; i++) {
+    const a = angle(i), lr = r + 22;
+    ctx.fillText(labels[i], cx + Math.cos(a) * lr, cy + Math.sin(a) * lr);
+  }
+}
+
+function drawBar(ctx, W, H, labels, norms) {
+  const pad = 24, bw = (W - pad * 2) / labels.length - 4;
+  const maxH = H - 40;
+
+  ctx.fillStyle = '#1a1a1a';
+  ctx.fillRect(pad, 0, W - pad * 2, maxH);
+
+  labels.forEach((label, i) => {
+    const x = pad + i * (bw + 4) + 2;
+    const bh = maxH * (norms[i] || 0.02);
+    const y = maxH - bh;
+
+    // Bar bg
+    ctx.fillStyle = '#111';
+    ctx.fillRect(x, 0, bw, maxH);
+
+    // Bar fill
+    const grad = ctx.createLinearGradient(x, y, x, maxH);
+    grad.addColorStop(0, 'rgba(200,169,110,0.9)');
+    grad.addColorStop(1, 'rgba(200,169,110,0.2)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(x, y, bw, bh);
+
+    // Label
+    ctx.font = '9px Inter';
+    ctx.fillStyle = '#4a4540';
+    ctx.textAlign = 'center';
+    ctx.fillText(label.slice(0, 3), x + bw / 2, H - 8);
+  });
+}
+
+// ─── REPORT ───────────────────────────────────────────────────
+function renderReport() {
+  if (!state.player || !state.data) return;
+  const p = state.data.players[state.player];
+  const today = todayStr();
+  const submitted = p?.daily_reports?.[today]?.submitted;
+
+  document.getElementById('reportSubmitted').style.display = submitted ? 'block' : 'none';
+  document.getElementById('reportForm').style.display = submitted ? 'none' : 'block';
+
+  if (!submitted) {
+    // Load pending external tasks from shared storage on first render (cross-sync with bot)
+    if (!state._extraLoaded) {
+      state.externalTasks = (p.pending_extra_tasks || []).map(t => ({ name: t.name, done: t.done }));
+      state._extraLoaded = true;
+    }
+
+    const tasksList = document.getElementById('tasksList');
+    tasksList.innerHTML = '';
+    let doneCt = 0;
+
+    TASKS.forEach(t => {
+      const done = state.tasksDone[t.key] || false;
+      if (done) doneCt++;
+      const el = document.createElement('div');
+      el.className = `task-item${done ? ' done' : ''}`;
+      el.innerHTML = `
+        <div class="task-check">${done ? '✓' : ''}</div>
+        <div class="task-info">
+          <div class="task-name">${t.emoji} ${t.name}</div>
+          <div class="task-zords">+<span class="task-zords-val">${t.zords}</span> Zords</div>
+        </div>`;
+      el.onclick = () => toggleTask(t.key);
+      tasksList.appendChild(el);
+    });
+
+    const pct = Math.round(doneCt / TASKS.length * 100);
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressText').textContent = `${doneCt} / ${TASKS.length}`;
+
+    renderExtraTasks();
+
+    if (doneCt === TASKS.length) {
+      document.getElementById('moodSelect').style.display = 'block';
+    }
+  }
+}
+
+function renderExtraTasks() {
+  const list = document.getElementById('extraTasksList');
+  list.innerHTML = '';
+  state.externalTasks.forEach((t, i) => {
+    const el = document.createElement('div');
+    el.className = `task-item${t.done ? ' done' : ''}`;
+    el.innerHTML = `
+      <div class="task-check">${t.done ? '✓' : ''}</div>
+      <div class="task-info">
+        <div class="task-name">${t.name}</div>
+        <div class="task-zords">مهمة خارجية</div>
+      </div>`;
+    el.onclick = () => toggleExtraTask(i);
+    list.appendChild(el);
+  });
+}
+
+async function addExtraTask() {
+  const input = document.getElementById('extraTaskInput');
+  const name = input.value.trim();
+  if (!name) return;
+  state.externalTasks.push({ name, done: false });
+  input.value = '';
+  renderExtraTasks();
+  await persistExtraTasks();
+}
+
+async function toggleExtraTask(idx) {
+  state.externalTasks[idx].done = !state.externalTasks[idx].done;
+  renderExtraTasks();
+  await persistExtraTasks();
+}
+
+async function persistExtraTasks() {
+  if (!state.player) return;
+  state.data.players[state.player].pending_extra_tasks = state.externalTasks.map(t => ({ name: t.name, done: t.done }));
+  await sbSet('main', state.data);
+}
+
+function toggleTask(key) {
+  state.tasksDone[key] = !state.tasksDone[key];
+  renderReport();
+}
+
+async function submitReport() {
+  if (!state.player) return;
+  const p = state.data.players[state.player];
+  const today = todayStr();
+  const doneCt = Object.values(state.tasksDone).filter(Boolean).length;
+  const pct = Math.round(doneCt / TASKS.length * 100);
+
+  const extraTotal = state.externalTasks.length;
+  const extraDone = state.externalTasks.filter(t => t.done).length;
+
+  const result = calcZords(state.tasksDone, pct, p.streak || 0, extraTotal, extraDone);
+  const newStreak = pct === 100 ? (p.streak || 0) + 1 : 0;
+  const momo = getMomo(pct, false);
+
+  state.data.players[state.player] = {
+    ...p,
+    zords: (p.zords || 0) + result.total,
+    streak: newStreak,
+    weekly_points: (p.weekly_points || 0) + result.points,
+    momos: [...(p.momos || []), momo.emoji + ' ' + momo.name],
+    mood_log: { ...p.mood_log, [today]: state.selectedMood || 3 },
+    pending_extra_tasks: [],
+    daily_reports: {
+      ...p.daily_reports,
+      [today]: {
+        tasks: state.tasksDone,
+        extra_tasks: extraTotal,
+        extra_done: extraDone,
+        submitted: true,
+        finish_hour: new Date().getHours(),
+        result: { pct, total_zords: result.total }
+      }
+    },
+    task_stats: {
+      ...p.task_stats,
+      ...Object.fromEntries(TASKS.map(t => [
+        t.key,
+        (p.task_stats?.[t.key] || 0) + (state.tasksDone[t.key] ? 1 : 0)
+      ]))
+    }
+  };
+
+  await sbSet('main', state.data);
+  showToast(`+${result.total} Zords — ${momo.emoji}`, 'success');
+  state.tasksDone = {};
+  state.externalTasks = [];
+  state._extraLoaded = false;
+  renderAll();
+}
+
+function calcZords(tasks, pct, streak, extraTasks = 0, extraDone = 0) {
+  let main = TASKS.reduce((s, t) => s + (tasks[t.key] ? t.zords : 0), 0);
+  let disc = 4;
+  if (pct === 100) disc += 8;
+  else if (pct >= 75) disc += 4;
+  else if (pct >= 50) disc += 1;
+
+  // External task bonus — matches bot's calculate_day_report exactly:
+  // +1 zord per task only if 5+ external tasks exist, +3 bonus if ALL completed
+  let extraZords = 0;
+  if (extraTasks >= 5) extraZords = extraTasks;
+  if (extraTasks >= 1 && extraDone === extraTasks) extraZords += 3;
+
+  let bonus = 0;
+  if (streak >= 30) bonus = 80;
+  else if (streak >= 14) bonus = 35;
+  else if (streak >= 7) bonus = 15;
+  else if (streak >= 3) bonus = 5;
+  const deduct = (7 - Object.values(tasks).filter(Boolean).length) * 3;
+  const total = Math.max(0, main + disc + extraZords + bonus - deduct);
+  const points = pct === 100 ? 15 : -deduct;
+  return { total, points };
+}
+
+function selectMood(v) {
+  state.selectedMood = v;
+  document.querySelectorAll('.mood-btn').forEach((b, i) => {
+    b.classList.toggle('selected', i + 1 === v);
+  });
+}
+
+// ─── STORE ────────────────────────────────────────────────────
+function renderStore() {
+  if (!state.player || !state.data) return;
+  const p = state.data.players[state.player];
+  document.getElementById('storeZords').textContent = p.zords || 0;
+
+  const cats = ['كل', ...new Set(Object.values(STORE_ITEMS).map(i => i.cat))];
+  const catsEl = document.getElementById('storeCats');
+  catsEl.innerHTML = cats.map(c =>
+    `<button class="cat-btn${c === state.storeCat ? ' active' : ''}" onclick="filterStore('${c}')">${c}</button>`
+  ).join('');
+
+  renderStoreGrid();
+}
+
+function filterStore(cat) {
+  state.storeCat = cat;
+  renderStore();
+}
+
+function renderStoreGrid() {
+  const p = state.data.players[state.player];
+  const grid = document.getElementById('storeGrid');
+  grid.innerHTML = '';
+
+  Object.entries(STORE_ITEMS).forEach(([key, item]) => {
+    if (state.storeCat !== 'كل' && item.cat !== state.storeCat) return;
+
+    const lastBuy = p.purchases?.[key];
+    let available = true;
+    if (lastBuy) {
+      const days = (Date.now() - new Date(lastBuy).getTime()) / 86400000;
+      if (days < item.cooldown) available = false;
+    }
+    const canAfford = (p.zords || 0) >= item.cost;
+
+    const card = document.createElement('div');
+    card.className = `store-card${item.rare ? ' rare' : ''}${!available || !canAfford ? ' unavailable' : ''}`;
+    card.innerHTML = `
+      ${item.rare ? '<div class="card-badge">نادر</div>' : ''}
+      <div class="card-name">${item.name}</div>
+      <div class="card-desc">${item.desc}</div>
+      <div class="card-cost">${item.cost} Z</div>
+      <div class="card-cd">Cooldown: ${item.cooldown}d</div>`;
+    if (available && canAfford) {
+      card.onclick = () => openStoreModal(key, item);
+    }
+    grid.appendChild(card);
+  });
+}
+
+function openStoreModal(key, item) {
+  state.selectedStore = key;
+  document.getElementById('modalTitle').textContent = item.name;
+  document.getElementById('modalDesc').textContent = item.desc;
+  document.getElementById('modalCost').textContent = item.cost + ' Zords';
+  document.getElementById('modalConfirm').onclick = () => buyItem(key, item);
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+async function buyItem(key, item) {
+  const p = state.data.players[state.player];
+  if ((p.zords || 0) < item.cost) { showToast('رصيد غير كافٍ', 'error'); closeModal(); return; }
+
+  state.data.players[state.player].zords -= item.cost;
+  if (!state.data.players[state.player].purchases) state.data.players[state.player].purchases = {};
+  state.data.players[state.player].purchases[key] = new Date().toISOString();
+
+  await sbSet('main', state.data);
+  closeModal();
+  showToast(`تم شراء ${item.name}`, 'success');
+  renderStore();
+  renderHome();
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+
+// ─── RANK ─────────────────────────────────────────────────────
+function renderRank() {
+  if (!state.data) return;
+  const p = state.data.players[state.player];
+  document.getElementById('myStreak').textContent = p?.streak || 0;
+
+  const myGroupId = p?.group_id;
+
+  const players = Object.entries(state.data.players)
+    .map(([name, pl]) => ({ name, ...pl }))
+    .filter(pl => pl.group_id === myGroupId)
+    .sort((a, b) => (b.weekly_points || 0) - (a.weekly_points || 0));
+
+  const list = document.getElementById('leadersList');
+  list.innerHTML = '';
+
+  players.forEach((pl, i) => {
+    const momos = (pl.momos || []).slice(-7);
+    const rank = calcRank(pl.weekly_points || 0, momos);
+    const rankColors = { gold: i === 0, silver: i === 1, bronze: i === 2 };
+    const rankCls = rankColors.gold ? 'gold' : rankColors.silver ? 'silver' : rankColors.bronze ? 'bronze' : '';
+
+    const item = document.createElement('div');
+    item.className = 'leader-item';
+    item.innerHTML = `
+      <div class="leader-rank ${rankCls}">${i + 1}</div>
+      <div class="leader-avatar">
+        ${pl.avatar_url
+          ? `<img src="${pl.avatar_url}">`
+          : `<span>${pl.name[0].toUpperCase()}</span>`}
+      </div>
+      <div class="leader-info">
+        <div class="leader-name">${pl.name}</div>
+        ${pl.active_title ? `<div class="leader-title">${pl.active_title}</div>` : ''}
+      </div>
+      <div class="leader-pts">
+        <div class="leader-pts-val">${pl.weekly_points || 0}</div>
+        <div class="leader-pts-label">pts</div>
+        <div class="leader-class ${rankClass(rank)}" style="margin-top:4px; font-size:9px;">${rank}</div>
+      </div>`;
+    list.appendChild(item);
+  });
+}
+
+// ─── PROFILE ──────────────────────────────────────────────────
+function renderProfile() {
+  if (!state.player || !state.data) return;
+  const p = state.data.players[state.player];
+
+  document.getElementById('editName').value = state.player;
+  document.getElementById('editDesc').value = p.description || '';
+
+  if (p.avatar_url) {
+    document.getElementById('profileAvatarImg').src = p.avatar_url;
+    document.getElementById('profileAvatarImg').style.display = 'block';
+    document.getElementById('profileAvatarText').style.display = 'none';
+  } else {
+    document.getElementById('profileAvatarText').textContent = state.player[0].toUpperCase();
+    document.getElementById('profileAvatarImg').style.display = 'none';
+    document.getElementById('profileAvatarText').style.display = 'block';
+  }
+
+  const titles = p.title_history || [];
+  const thCard = document.getElementById('titleHistoryCard');
+  if (titles.length > 0) {
+    thCard.style.display = 'block';
+    document.getElementById('titleHistoryList').innerHTML =
+      titles.map(t => `<span class="title-badge">⚔️ ${t.title}</span>`).join('');
+  } else {
+    thCard.style.display = 'none';
+  }
+
+  const reports = p.daily_reports || {};
+  const moods = p.mood_log || {};
+  const momos = p.momos || [];
+  const last7 = Object.keys(reports).sort().slice(-7);
+  const histEl = document.getElementById('historyListProfile');
+  histEl.innerHTML = '';
+
+  last7.reverse().forEach((day, i) => {
+    const r = reports[day]?.result || {};
+    const mood = moods[day];
+    const moodEmoji = mood ? ['😞','😐','🙂','😊','🌟'][mood - 1] : '—';
+    const dayIndexInMomos = momos.length - 1 - i;
+    const momoTxt = momos[dayIndexInMomos] || '—';
+    const pct = r.pct || 0;
+
+    const item = document.createElement('div');
+    item.className = 'history-item';
+    item.innerHTML = `
+      <div class="history-top">
+        <div class="history-date">${day}</div>
+        <div class="history-momo">${momoTxt.split(' ')[0]}</div>
+      </div>
+      <div class="history-stats">
+        <div class="history-stat">إنجاز: <span>${pct}%</span></div>
+        <div class="history-stat">Zords: <span>+${r.total_zords || 0}</span></div>
+        <div class="history-stat">مزاج: ${moodEmoji}</div>
+      </div>
+      <div class="history-bar">
+        <div class="history-bar-fill" style="width:${pct}%"></div>
+      </div>`;
+    histEl.appendChild(item);
+  });
+}
+
+async function saveProfile() {
+  if (!state.player) return;
+  const newName = document.getElementById('editName').value.trim();
+  const desc = document.getElementById('editDesc').value.trim();
+
+  if (!newName || newName.length < 2) { showToast('الاسم قصير جداً', 'error'); return; }
+
+  const p = state.data.players[state.player];
+  p.description = desc;
+
+  if (newName !== state.player) {
+    state.data.players[newName] = { ...p, name: newName };
+    delete state.data.players[state.player];
+    state.player = newName;
+  }
+
+  await sbSet('main', state.data);
+  showToast('تم الحفظ', 'success');
+  renderAll();
+}
+
+async function handleAvatarChange(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const dataUrl = e.target.result;
+    state.data.players[state.player].avatar_url = dataUrl;
+    await sbSet('main', state.data);
+    renderAll();
+    showToast('تم تحديث الصورة', 'success');
+  };
+  reader.readAsDataURL(file);
+}
+
+function goToProfile() { navigate('profile'); }
+
+// ─── NAVIGATE ──────────────────────────────────────────────────
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.getElementById('nav-' + page).classList.add('active');
+}
+
+// ─── HELPERS ──────────────────────────────────────────────────
+function todayStr() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function calcRank(points, momos) {
+  if (!momos || momos.length === 0) return '⬜ Unranked';
+  if (momos.length < 3) return '🔘 In Progress';
+  const elite = momos.filter(m => m.includes('Elite')).length;
+  const angry = momos.filter(m => m.includes('Angry')).length;
+  if (points >= 120 && elite >= 5 && angry === 0) return '💠 Class S';
+  if (points >= 90 && elite >= 2 && angry === 0) return '🔵 Class A';
+  if (points >= 70 && elite >= 1 && angry <= 1) return '🟢 Class B';
+  if (points >= 50 && angry <= 2) return '🟡 Class C';
+  if (points >= 30 && angry <= 3) return '🟠 Class D';
+  return '🔴 Class E';
+}
+
+function rankClass(rank) {
+  if (rank.includes('S')) return 'rank-S';
+  if (rank.includes('A')) return 'rank-A';
+  if (rank.includes('B')) return 'rank-B';
+  if (rank.includes('C')) return 'rank-C';
+  if (rank.includes('D')) return 'rank-D';
+  if (rank.includes('E')) return 'rank-E';
+  return 'rank-U';
+}
+
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast${type ? ' ' + type : ''} show`;
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ─── START ────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
